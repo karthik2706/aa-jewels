@@ -332,17 +332,18 @@ function authCheck() {
         signInOptions: [
           {
             provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
-            signInMethod: firebase.auth.EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD
+            signInMethod: firebase.auth.EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD,
           }
         ],
+        signInSuccessUrl: window.location.href
       });
-      $('#auth-modal').modal({
-        backdrop: 'static',
-        keyboard: false,
-        show: true
-      });
+      $('#auth-modal').addClass('show');
     }
   });
+}
+
+function signInSuccessUrl() {
+  console.log('login success');
 }
 
 $(document).ready(function () {
