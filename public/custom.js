@@ -132,7 +132,7 @@ function renderProfile(data) {
       var name = $(this).attr("name");
       $(this).val(data[name]);
     });
-    initForm();
+  initForm();
 }
 
 function orderSumitted(data, resp) {
@@ -148,24 +148,24 @@ function orderSumitted(data, resp) {
     .find(".toAdd")
     .html(
       orderData.name +
-        "<br>" +
-        orderData.address.replace(/(?:\r\n|\r|\n)/g, "<br>") +
-        "<br>" +
-        orderData.city +
-        "<br> Pincode: " +
-        orderData.pincode +
-        "<br> Mobile: " +
-        orderData.mobile
+      "<br>" +
+      orderData.address.replace(/(?:\r\n|\r|\n)/g, "<br>") +
+      "<br>" +
+      orderData.city +
+      "<br> Pincode: " +
+      orderData.pincode +
+      "<br> Mobile: " +
+      orderData.mobile
     );
 
   $printHtml
     .find(".fromAdd")
     .html(
       (orderData.rname || profileData.cname) +
-        "<br>" +
-        profileData.retAddress.replace(/(?:\r\n|\r|\n)/g, "<br>") +
-        "<br> Mobile: " +
-        (orderData.rmobile || profileData.cnumber)
+      "<br>" +
+      profileData.retAddress.replace(/(?:\r\n|\r|\n)/g, "<br>") +
+      "<br> Mobile: " +
+      (orderData.rmobile || profileData.cnumber)
     );
   // console.log(orderData.rmobile, profileData.cnumber);
   $("#createOrder")[0].reset();
@@ -177,7 +177,7 @@ function orderSumitted(data, resp) {
   if (!userExists) {
     createCustomer(data);
   }
-  
+
   //Create Delhivery WayBill Number
   if (orderData.vendor === "2") {
     delhiveryApis('GET', '/waybill/api/fetch/json/', {
@@ -197,20 +197,20 @@ function trackingDCallback(data, OrderDetails) {
   var orderId = OrderDetails[4];
   //Update Tracking number for Delhivery Order
   var orderRef = firebase
-      .app()
-      .database()
-      .ref(`/oms/clients/${clientRef}/orders/${orderId}/fields`);
-    orderRef
-      .update({
-        tracking: trackValue,
-      })
-      .then(function () {
-        refreshOrders();
-      });
+    .app()
+    .database()
+    .ref(`/oms/clients/${clientRef}/orders/${orderId}/fields`);
+  orderRef
+    .update({
+      tracking: trackValue,
+    })
+    .then(function () {
+      refreshOrders();
+    });
 }
 
 //Click on Order tab
-$('#orders-tab').click(function(){
+$('#orders-tab').click(function () {
   refreshOrders();
 });
 
@@ -310,7 +310,43 @@ function initForm() {
   $("[name=vendor]").trigger('change');
 }
 
+function customSiginin(email, password) {
+  firebase.auth().signInWithEmailAndPassword(email, password)
+  .then((userCredential) => {
+    // Signed in
+    var user = userCredential.user;
+  })
+  .catch((error) => {
+    var errorCode = error.code;
+    var errorMessage = error.message;
+  });
+}
+
+function authCheck() {
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+      // logged in do nothing
+    } else {
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+      ui.start('#firebaseui-auth-container', {
+        signInOptions: [
+          {
+            provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+            signInMethod: firebase.auth.EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD
+          }
+        ],
+      });
+      $('#auth-modal').modal({
+        backdrop: 'static',
+        keyboard: false,
+        show: true
+      });
+    }
+  });
+}
+
 $(document).ready(function () {
+  authCheck();
   fetchOrders("example");
   fetchProfile();
 
@@ -402,24 +438,24 @@ $(document).ready(function () {
       .database()
       .ref(`/oms/clients/${clientRef}/orders/${data.bsId}/fields`);
 
-      orderRef.once("value").then((snapshot) => {
-        var orderData = snapshot.val();
-        $editModal.find("#orderId").val(data.bsId);
-        $('#updateOrder').find('[name=vendor]').val(orderData.vendor).trigger('change');
-        // console.log(orderData);
-        
-        $('#updateOrder')
-          .find(":input:visible")
-          .not("button")
-          .each(function () {
-            var $this = $(this);
-            var name = $this.attr("name");
-            $this.val(orderData[name]);//.find('[name=vendor]')
-            // if ($this.is("input")) {
-            //   $this.val(orderData[name]);
-            // }
-          });
-      });
+    orderRef.once("value").then((snapshot) => {
+      var orderData = snapshot.val();
+      $editModal.find("#orderId").val(data.bsId);
+      $('#updateOrder').find('[name=vendor]').val(orderData.vendor).trigger('change');
+      // console.log(orderData);
+
+      $('#updateOrder')
+        .find(":input:visible")
+        .not("button")
+        .each(function () {
+          var $this = $(this);
+          var name = $this.attr("name");
+          $this.val(orderData[name]);//.find('[name=vendor]')
+          // if ($this.is("input")) {
+          //   $this.val(orderData[name]);
+          // }
+        });
+    });
   });
 
   $("body").on("submit", "#updateOrder", function (event) {
@@ -653,7 +689,7 @@ $(document).ready(function () {
     //   $form.find("[name=country]").val(country).attr("readonly", "");
     // }
 
-    
+
   });
 
   //Tracking Code
@@ -787,27 +823,27 @@ $(document).ready(function () {
   });
 
   //Mobile Number Validation
-  $('[name=mobile]').blur(function(e) {
+  $('[name=mobile]').blur(function (e) {
     e.preventDefault();
     var $form = $(e.target).closest('form');
     var mobile = $form.find('[name=mobile');
-    var  message = $form.find('.mobileMessage');
+    var message = $form.find('.mobileMessage');
     $form.find('.mobileMessage');
-    if(!mobile.val().match('[0-9]{10}'))  {
-        console.log("Please put 10 digit mobile number");
-        message.addClass('error').removeClass('hide');
-        message[0].innerHTML = "Required 10 digits for mobile number";
-        return;
+    if (!mobile.val().match('[0-9]{10}')) {
+      console.log("Please put 10 digit mobile number");
+      message.addClass('error').removeClass('hide');
+      message[0].innerHTML = "Required 10 digits for mobile number";
+      return;
     } else {
       message.addClass('hide')
     }
   });
 
-  
+
 
 });
 
-window.onload = function(){
+window.onload = function () {
   // initForm();
 }
 
@@ -1019,17 +1055,17 @@ function pincodeCallback(data, target) {
       .addClass("error")
       .removeClass("success")
       .text("Invalid or Unservicable Pincode");
-      // $form.find('[name=city]').val('');
-      // $form.find('[name=state]').val('');
-      // $form.find('[name=country]').val('');
+    // $form.find('[name=city]').val('');
+    // $form.find('[name=state]').val('');
+    // $form.find('[name=country]').val('');
   } else {
     $ele
       .next("span")
       .removeClass("error")
       .addClass("success")
       .text("Servicable Pincode");
-      // $form.find('[name=city]').val('');
-      // $form.find('[name=state]').val('');
-      // $form.find('[name=country]').val('');
+    // $form.find('[name=city]').val('');
+    // $form.find('[name=state]').val('');
+    // $form.find('[name=country]').val('');
   }
 }
