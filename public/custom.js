@@ -222,6 +222,7 @@ function refreshOrders() {
 
 //Fetch Orders
 function fetchOrders(div) {
+  $loading.show();
   firebase
     .app()
     .database()
@@ -230,6 +231,7 @@ function fetchOrders(div) {
     .then((snapshot) => {
       ordersData = snapshot.val();
       renderOrders(div, ordersData, true);
+      $loading.hide();
     });
 }
 
@@ -310,7 +312,12 @@ function initForm() {
   $("[name=vendor]").trigger('change');
 }
 
+var $loading;
+
 $(document).ready(function () {
+
+  $loading = $('.loading');
+
   fetchOrders("example");
   fetchProfile();
 
