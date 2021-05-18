@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.css" />
 
     <title>Order Management System</title>
 
@@ -44,6 +45,9 @@
           border: 1px solid #000;
           padding: 20px;
         }
+        .content-container {
+            position: relative;
+        }
         .loading {
             display: none;
             position: absolute;
@@ -58,14 +62,37 @@
             z-index: 1000;
             padding-top: 20%;
         }
-        .content-container {
-            position: relative;
+        #auth-modal {
+            background-color: #fff;
+        }
+
+        #auth-modal .modal-content {
+            background-color: #fff;
+            min-height: 700px;
+            padding-top: 20%;
+        }
+
+        #auth-modal .modal-content h3{
+            padding: 0 27%;
+            margin-bottom: 30px;
         }
     </style>
 </head>
 
 <body>
-    
+    <div id="auth-modal" 
+        class="modal fade bd-example-modal-lg" 
+        tabindex="-1" 
+        role="dialog" 
+        aria-labelledby="myLargeModalLabel" 
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <h3>Login</h3>
+            <div id="firebaseui-auth-container" class="container"></div>
+          </div>
+        </div>
+      </div>
     <div class="container">
         <br>
         <br>
@@ -428,6 +455,7 @@
     <!-- Add Firebase products that you want to use -->
     <script src="https://www.gstatic.com/firebasejs/8.5.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.5.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.js"></script>
 
     <!-- Optional JavaScript; choose one of the two! -->
 
