@@ -234,7 +234,7 @@ function fetchOrders(div) {
       $loading.hide();
     });
 }
-
+// var currentTable;
 function renderOrders(div, data, isParse) {
   let parseData;
 
@@ -248,8 +248,10 @@ function renderOrders(div, data, isParse) {
     parseData = data;
   }
 
-  $("#" + div).DataTable({
+  // currentTable =
+   $("#" + div).DataTable({
     data: parseData,
+    order: [[ 1, "desc" ]],
     createdRow: function (row, parseData, dataIndex) {
       $(row).attr({
         "data-bs-id": parseData.key,
@@ -261,8 +263,27 @@ function renderOrders(div, data, isParse) {
       if (div === "exportTable") {
         $("#exportOrders .bulkBtn").removeAttr("disabled");
       }
+
+      if(div === 'deleteOrdersTable') {
+        $('#selectAll, .checkOrder').removeAttr('disabled');
+        $('body').on('click', '#selectAll', function(){
+          var $table = $(this).closest('table');
+          var isChecked = $(this).is(':checked');
+          $table.find('tbody tr').each(function(){
+            $(this).find('td:first input')[0].checked = isChecked;
+          });
+        });
+      }
     },
     columns: [
+      {
+        title: "<input disabled id='selectAll' type='checkbox' />",
+        orderable: false,
+        style: 'os',
+        render: function () {
+          return "<input disabled name='rowOrder' class='checkOrder' type='checkbox' />"
+        }
+    },
       {
         title: "Date",
         data: "time",
@@ -353,7 +374,7 @@ $(document).ready(function () {
   fetchOrders("example");
   fetchProfile();
 
-  $("#createOrder").submit(function (event) {
+  $('body').on('submit', "#createOrder", function (event) {
     event.preventDefault();
     var fields = {};
     $(this).find("[name=time]").val(moment().format("DD-MM-YYYY"));
@@ -364,6 +385,9 @@ $(document).ready(function () {
         fields[this.name] = $(this).val();
       });
     var obj = { fields: fields };
+    if(obj.fields.ref == '') {
+      obj.fields.ref = obj.fields.mobile.slice(-5);
+    }
     createOrder(obj);
   });
 
@@ -432,10 +456,21 @@ $(document).ready(function () {
 
   var $editModal = $("#editModal");
   $editModal.on("show.bs.modal", function (event) {
-    // Button that triggered the modal
+    // event.preventDefault();
     var row = event.relatedTarget;
-    // Extract info from data-bs-* attributes
+    // if(!$(row).find('.checkOrder')) {
+    //   event.stopPropagation();
+    // }
     var data = $(row).data();
+    $loading.show();
+    var $updateOrderForm = $('#createOrder').clone(true);
+    $updateOrderForm.removeClass('hide').find('.OrderSubmit').hide();
+    $updateOrderForm.find('.dateId').removeClass('hide');
+    $('#updateOrderContainer').html($updateOrderForm.attr({
+      'id' : 'updateOrder',
+      'data-order-id' : data.bsId
+    }));
+    
     var orderRef = firebase
       .app()
       .database()
@@ -443,28 +478,36 @@ $(document).ready(function () {
 
     orderRef.once("value").then((snapshot) => {
       var orderData = snapshot.val();
-      $editModal.find("#orderId").val(data.bsId);
-      $('#updateOrder').find('[name=vendor]').val(orderData.vendor).trigger('change');
+      
       // console.log(orderData);
-
-      $('#updateOrder')
-        .find(":input:visible")
-        .not("button")
-        .each(function () {
-          var $this = $(this);
+      $('#updateOrder').find('select').each(function(){
+        var $this = $(this);
           var name = $this.attr("name");
-          $this.val(orderData[name]);//.find('[name=vendor]')
-          // if ($this.is("input")) {
-          //   $this.val(orderData[name]);
-          // }
-        });
+          $this.val(orderData[name]).trigger('change');
+      });
+
+        $('#updateOrder')
+          .find(":input").not('button, select')
+          .each(function () {
+            var $this = $(this);
+            var name = $this.attr("name");
+            $this.val(orderData[name]);
+          });
+          $loading.hide();
     });
   });
+
+
+  $editModal.on("hidden.bs.modal", function (event) {
+    $('#updateOrder').html('');
+  });
+  
 
   $("body").on("submit", "#updateOrder", function (event) {
     event.preventDefault();
     var fields = {};
-    var orderId = $("#orderId").val();
+    var orderId = $(this).attr('data-order-id');
+
     // $(this).find("[name=time]").text(moment().format("DD-MM-YYYY"));
     $(this)
       .find(":input")
@@ -474,12 +517,21 @@ $(document).ready(function () {
       });
 
     var obj = { fields: fields };
-    console.log(obj);
+    if(obj.fields.ref == '') {
+      obj.fields.ref = obj.fields.mobile.slice(-5);
+    }
+
+    if(!obj.fields.key || obj.fields.key == '') {
+      obj.fields.key = orderId;
+    }
+
+    // console.log(obj);
+
     var orderRef = firebase
       .app()
       .database()
       .ref(`/oms/clients/${clientRef}/orders/${orderId}`);
-    //createOrder(obj);
+
     orderRef.update(obj).then(function () {
       $(".modal").find(".btn-close").click();
       refreshOrders();
@@ -495,15 +547,26 @@ $(document).ready(function () {
   });
 
   //Calender Plugin
-  $("#fromdatepicker").datepicker({
+  $("#fromdatepicker, #fromdatepicker1").datepicker({
     dateFormat: "dd-mm-yy",
   });
-  $("#todatepicker").datepicker({
+  $("#todatepicker, #todatepicker1").datepicker({
     dateFormat: "dd-mm-yy",
   });
+  // $("#min.dataFormat").datepicker({
+  //   dateFormat: "dd-mm-yy",
+  // });
+  // $("#max.dataFormat").datepicker({
+  //   dateFormat: "dd-mm-yy",
+  // });
+
   $("#exportOrder").change(function () {
     $("#exportOrders .bulkBtn").attr("disabled", "disabled");
   });
+
+  // $("#deleteOrders").change(function () {
+  //   $("#deleteOrders .bulkBtn").attr("disabled", "disabled");
+  // });
 
   //convert date
   function formateDate(date) {
@@ -517,17 +580,29 @@ $(document).ready(function () {
   }
 
   var exportData;
-  $("#exportOrder").submit(function (event) {
+  // fetchTableOrders('exportOrder', 'exportTable');
+
+  $('#exportOrder').submit(function (event) {
     event.preventDefault();
+    fetchTableOrders(this, 'exportTable');
+  });
+
+  $('#deleteOrders').submit(function (event) {
+    event.preventDefault();
+    fetchTableOrders(this, 'deleteOrdersTable');
+  });
+
+  
+  function fetchTableOrders(order, table) {
     var filters = {};
-    $(this)
+    $(order)
       .find(":input")
       .not("button")
       .each(function () {
         filters[this.name] = $(this).val();
       });
 
-    firebase
+      firebase
       .app()
       .database()
       .ref(`/oms/clients/${clientRef}/orders`)
@@ -545,8 +620,6 @@ $(document).ready(function () {
           return order.vendor == filters.vendor;
         });
 
-        // console.log(filters.fromdatepicker, filters.todatepicker);
-
         var startDate = new Date(formateDate(filters.fromdatepicker));
         var endDate;
 
@@ -556,21 +629,19 @@ $(document).ready(function () {
           endDate = new Date(formateDate(filters.todatepicker));
         }
 
-        // console.log('endDate-'+formateDate(filters.todatepicker));
-
         var resultProductData = filteredOrders.filter(function (order) {
           var date = new Date(formateDate(order.time));
-          // console.log(date, startDate, endDate);
           return date >= startDate && date <= endDate;
         });
 
-        if ($.fn.DataTable.isDataTable("#exportTable")) {
-          $("#exportTable").dataTable().fnDestroy();
+        if ($.fn.DataTable.isDataTable('#'+table)) {
+          $('#'+table).dataTable().fnDestroy();
         }
+
         exportData = resultProductData;
-        renderOrders("exportTable", resultProductData, false);
+        renderOrders(table, resultProductData, false);
       });
-  });
+  }
 
   $(".bulkBtn").click(function (e) {
     e.preventDefault();
@@ -727,6 +798,8 @@ $(document).ready(function () {
           this.tracking = this.vendor + "_" + this.tracking;
         });
 
+        
+
         $("#trackingTable").DataTable({
           responsive: true,
           data: filteredOrders,
@@ -833,7 +906,7 @@ $(document).ready(function () {
     var message = $form.find('.mobileMessage');
     $form.find('.mobileMessage');
     if (!mobile.val().match('[0-9]{10}')) {
-      console.log("Please put 10 digit mobile number");
+      // console.log("Please put 10 digit mobile number");
       message.addClass('error').removeClass('hide');
       message[0].innerHTML = "Required 10 digits for mobile number";
       return;
@@ -842,7 +915,38 @@ $(document).ready(function () {
     }
   });
 
+  //Date search in data tables
+  // var minDate, maxDate;
+  // // Custom filtering function which will search data in column four between two values
+  // $.fn.dataTable.ext.search.push(
+  //     function( settings, data, dataIndex ) {
+  //         var min = minDate.val();
+  //         var max = maxDate.val();
+  //         var date = new Date( data[4] );
+  
+  //         if (
+  //             ( min === null && max === null ) ||
+  //             ( min === null && date <= max ) ||
+  //             ( min <= date   && max === null ) ||
+  //             ( min <= date   && date <= max )
+  //         ) {
+  //             return true;
+  //         }
+  //         return false;
+  //     }
+  // );
+  // Create date inputs
+  // minDate = new DateTime($('#min'), {
+  //   format: 'DD-MM-YYYY'
+  // });
+  // maxDate = new DateTime($('#max'), {
+  //     format: 'DD-MM-YYYY'
+  // });
 
+  // // Refilter the table
+  // $('#min, #max').on('change', function () {
+  //   currentTable.draw();
+  // })
 
 });
 
@@ -1021,6 +1125,21 @@ function generateXL(type, data) {
   XLSX.writeFile(wb, filename);
   if (typeof console !== "undefined") console.log(new Date());
 }
+
+$(document).ready(function(){
+  // delhiveryApis(
+  //   "GET",
+  //   "/api/v1/packages//",
+  //   {
+  //     token: clientKeyD,
+  //     waybill: '6218910003032',
+  //   },
+  //   function(resp){
+  //     console.log(resp)
+  //   },
+  //   ''
+  // );
+})
 
 function delhiveryApis(method, service, data, callback, target) {
   $.ajax({
