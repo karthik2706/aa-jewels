@@ -80,7 +80,7 @@ function updateProfile(data) {
     .ref(`/oms/clients/${clientRef}/profile/${profileRef}`)
     .update(data)
     .then(function () {
-      console.log("profile data posted");
+      // console.log("profile data posted");
       $loading.hide();
     });
 }
@@ -254,10 +254,10 @@ function renderOrders(div, data, isParse) {
     createdRow: function (row, parseData, dataIndex) {
       $(row).attr({
         "data-bs-id": parseData.key,
-        "data-bs-toggle": "modal",
+        //"data-bs-toggle": "modal",
         "data-bs-target": "#editModal",
       });
-      console.log(parseData);
+      // console.log(parseData);
       if(parseData.isDispatched) {
         $(row).addClass('orderDispatched');
       }
@@ -299,6 +299,7 @@ function renderOrders(div, data, isParse) {
       },
       { title: "Name", data: "name" },
       { title: "Mobile", data: "mobile" },
+      { title: "Reference", data: "ref" },
       { title: "Pincode", data: "pincode" },
       { title: "Reseller", data: "rname" },
       {
@@ -385,7 +386,7 @@ $(document).ready(function () {
       .find(":input")
       .not("button")
       .each(function () {
-        fields[this.name] = $(this).val();
+        fields[this.name] = $(this).val().trim();
       });
     var obj = { fields: fields };
     if(obj.fields.ref == '') {
@@ -457,23 +458,23 @@ $(document).ready(function () {
     initForm();
   });
 
-  var $editModal = $("#editModal");
-  $editModal.on("show.bs.modal", function (event) {
+
+  function editModalMethod(event) {
     var row = event.relatedTarget;
-    var data = $(row).data();
+    var data = row['data-order-id'];
     $loading.show();
     var $updateOrderForm = $('#createOrder').clone(true);
     $updateOrderForm.removeClass('hide').find('.OrderSubmit').hide();
     $updateOrderForm.find('.dateId').removeClass('hide');
     $('#updateOrderContainer').html($updateOrderForm.attr({
       'id' : 'updateOrder',
-      'data-order-id' : data.bsId
+      'data-order-id' : data
     }));
     
     var orderRef = firebase
       .app()
       .database()
-      .ref(`/oms/clients/${clientRef}/orders/${data.bsId}/fields`);
+      .ref(`/oms/clients/${clientRef}/orders/${data}/fields`);
 
     orderRef.once("value").then((snapshot) => {
       var orderData = snapshot.val();
@@ -494,8 +495,23 @@ $(document).ready(function () {
           });
           $loading.hide();
     });
+  }
+
+  // var $dataTable = $('.dataTable');
+  $('body').on('click', '.dataTable tbody tr', function(event){
+    // console.log(event.target);
+    if(!$(event.target).hasClass('checkOrder')) {
+      $("#editModal").modal('show', {
+        'data-order-id' : $(this).attr('data-bs-id')
+      });
+    }
   });
 
+  var $editModal = $("#editModal");
+  $editModal.on("show.bs.modal", function (event) {
+    // console.log(event, data);
+    editModalMethod(event);
+  });
 
   $editModal.on("hidden.bs.modal", function (event) {
     $('#updateOrder').html('');
@@ -606,7 +622,7 @@ $(document).ready(function () {
         });
 
         var filteredOrders = parseData.filter(function (order) {
-          return order.vendor == filters.vendor;
+          return (order.vendor == filters.vendor && !order.isDispatched);
         });
 
         var startDate = new Date(formateDate(filters.fromdatepicker));
@@ -1114,7 +1130,7 @@ function pincodeCallback(data, target) {
   // console.log(pinCodeData);
   var $ele = $(target);
   var $form = $ele.closest("form")
-  console.log(pinCodeData);
+  // console.log(pinCodeData);
   if (pinCodeData.isInvalid) {
     $ele
       .next("span")
