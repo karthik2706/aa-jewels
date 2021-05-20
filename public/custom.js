@@ -257,6 +257,10 @@ function renderOrders(div, data, isParse) {
         "data-bs-toggle": "modal",
         "data-bs-target": "#editModal",
       });
+      console.log(parseData);
+      if(parseData.isDispatched) {
+        $(row).addClass('orderDispatched');
+      }
     },
     drawCallback: function () {
       if (div === "exportTable") {
@@ -276,11 +280,11 @@ function renderOrders(div, data, isParse) {
     },
     columns: [
       {
-        title: "<input disabled id='selectAll' type='checkbox' />",
+        title: "<input id='selectAll' type='checkbox' />",
         orderable: false,
         style: 'os',
         render: function () {
-          return "<input disabled name='rowOrder' class='checkOrder' type='checkbox' />"
+          return "<input name='rowOrder' class='checkOrder' type='checkbox' />"
         }
     },
       {
@@ -833,6 +837,39 @@ $(document).ready(function () {
         // renderOrders("trackingTable", filteredOrders, false);
       });
   });
+
+  $('.dispatched').click(function(e){
+    e.preventDefault();
+    var table = $('#example');
+    var rows = table.find('tbody tr');
+    var selectedRows = [];
+    rows.each(function(){
+      var row = $(this);
+      var checkbox = row.find('.checkOrder');
+      var disp = checkbox.is(':checked');
+      if(disp) {
+        selectedRows.push(row.attr('data-bs-id'));
+      }
+    });
+    $(e.target).attr('disabled' , 'disabled');
+    markAsDispatched(selectedRows, e);
+  });
+
+  //Mark as dispatched
+  function markAsDispatched(data, e) {
+    $(data).each(function(index, val){
+      var orderId = val;
+      firebase
+      .app()
+      .database()
+      .ref(`/oms/clients/${clientRef}/orders/${orderId}/fields`)
+      .update({
+        isDispatched: true
+      })
+    });
+    refreshOrders();
+    $(e.target).removeAttr('disabled');
+  }
 
   //Mobile Number Validation
   $('[name=mobile]').blur(function (e) {
