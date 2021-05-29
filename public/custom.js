@@ -322,6 +322,9 @@ function renderOrders(div, data, isParse) {
             case "4":
               courier = "Xpressbees";
               break;
+            case "5":
+              courier = "Ecom Express";
+              break;
           }
           return courier;
         },
@@ -831,6 +834,8 @@ $(document).ready(function () {
                     courier = "dtdc";
                   } else if (details[0] == "4") {
                     courier = "xpressbees";
+                  } else if (details[0] == "5") {
+                    courier = "ecom-express";
                   }
                   if (details[1] && details[1].trim().length) {
                     tracking = details[1];
