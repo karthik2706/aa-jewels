@@ -1284,3 +1284,54 @@ function pincodeCallback(data, target) {
       .text("Servicable Pincode");
   }
 }
+
+
+
+// Price Calculator
+$(document).ready(function(){
+
+  var $calcFrom = $('#priceCalc');
+
+  $('input[name=vendor]').change(function(){
+    var vendor = $(this).val();
+    var itemCode = $calcFrom.find('#itemcodeLabel');
+
+    if(vendor === 'sj') {
+      itemCode.text('Price');
+    } else {
+      itemCode.text('Code');
+    }
+  });
+
+  $calcFrom.submit(function(e){
+    e.preventDefault();
+    var $this = $(this);
+    var vendor = $this.find('input[name=vendor]:checked').val();
+    var code = Number($this.find('#itemcode').val());
+    var shipping = Number($this.find('#shippingCharges').val());
+    var ctc = $this.find('#ctc');
+    var ctcVal;
+    //CTC Calculation
+    if(vendor === 'nk') {
+      ctcVal = (code*10) + shipping;
+    } else if (vendor === 'hc') {
+      ctcVal = (code*5) + shipping;
+    } else if (vendor === 'sj') {
+      var discount = (code/100) * 15;
+      ctcVal = (code - discount) + shipping;
+    } else if (vendor === 'dvcode') {
+      code = code*10;
+      var discount = (code/100) * 20;
+      ctcVal = (code - discount) + shipping;
+    } else if (vendor === 'rcode') {
+      code = code*4;
+      var discount = (code/100) * 20;
+      ctcVal = (code - discount) + shipping;
+    }
+    ctc.val(ctcVal);
+
+
+    //Margin Calculation
+    
+  });
+})
