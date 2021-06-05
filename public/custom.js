@@ -284,6 +284,7 @@ function renderOrders(div, data, isParse) {
       {
         title: "<input id='selectAll' type='checkbox' />",
         orderable: false,
+        width: "1%",
         style: 'os',
         render: function () {
           return "<input name='rowOrder' class='checkOrder' type='checkbox' />"
@@ -291,10 +292,12 @@ function renderOrders(div, data, isParse) {
     },
       {
         title: "Date",
+        width: "10%",
         data: "time",
         render: function (data) {
           if (data && data.length) {
-            return data;
+            var from = data.split("-");
+           return from[2]+'-'+from[1]+'-'+from[0];
           }
           return "";
         },
@@ -303,7 +306,7 @@ function renderOrders(div, data, isParse) {
       { title: "Mobile", data: "mobile" },
       { title: "Reference", data: "ref" },
       { title: "Pincode", data: "pincode" },
-      { title: "Reseller", data: "rname" },
+      { title: "Reseller", data: "rname"},
       {
         title: "Courier",
         data: "vendor",
